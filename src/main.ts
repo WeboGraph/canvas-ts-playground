@@ -1,18 +1,19 @@
 import './style.css';
-import { InitCanvasAndContext, AnimationLoop } from './utils/canvas';
+import { Canvas, CanvasArgs } from './utils/canvas';
 
-const { context } = InitCanvasAndContext('#myCanvas', [600, 400]);
-const loop = new AnimationLoop(context, 30);
+const canvasArgs: CanvasArgs = {
+  selector: '#myCanvas',
+  context_type: '2d'
+}
 
-function draw(ctx: CanvasRenderingContext2D): void {
+const canvas = new Canvas(canvasArgs);
+
+canvas.draw((ctx: CanvasRenderingContext2D) => {
   const x: number = 0;
   const y: number = 0;
   const width: number = 150;
   const height: number = 150;
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = 'hotpink';
   ctx.fillRect(x, y, width, height);
-}
-
-loop.addAnimation(draw);
-loop.run();
+});

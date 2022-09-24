@@ -1,36 +1,42 @@
-interface CanvasAndContext {
-  canvas: HTMLCanvasElement,
-  context: CanvasRenderingContext2D,
+export type CanvasArgs = {
+  selector: string,
+  context_type?: '2d' | 'webgl',
+  resolution?: [width: number, height: number],
 }
 
-type CanvasResolution = [width: number, height: number];
+export class Canvas {
+  #ctx: RenderingContext | null;
+  #element: HTMLCanvasElement;
 
-export function InitCanvasAndContext(selector: string, [width, height]: CanvasResolution): CanvasAndContext {
-  const canvas: HTMLCanvasElement = document.querySelector(selector) as HTMLCanvasElement;
-  const context: RenderingContext | null = canvas.getContext('2d');
+  constructor({ selector, context_type, resolution }: CanvasArgs) {
+    this.#element = document.querySelector(selector) as HTMLCanvasElement;
+    this.#ctx = this.#element.getContext(context_type || '2d');
 
-  canvas.width = width;
-  canvas.height = height;
+    if (!resolution) {
+      const { width, height} = this.#element.getBoundingClientRect();
+      resolution = [width, height];
+    }
 
-  return { canvas, context } as CanvasAndContext;
-}
+    this.#element.width = resolution[0];
+    this.#element.height = resolution[1];
 
-export function CenterCoordinateSystem(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): void {
-  const x = canvas.width / 2;
-  const y = canvas.height / 2;
+    console.log(this.#element.width)
+  }
 
-  context.translate(x, y);
+  draw(callback: Function): void {
+    callback(this.#ctx);
+  }
 }
 
 export class AnimationLoop {
-  #ctx: CanvasRenderingContext2D;
+  #canvas: Canvas;
   #frameDistance: number;
   #last: number = 0;
   #raf: number = 0;
   #animations: Function[] = [];
 
-  constructor(ctx: CanvasRenderingContext2D, framerate: number) {
-    this.#ctx = ctx;
+  constructor(canvas: Canvas, framerate: number) {
+    this.#canvas = canvas;
     this.#frameDistance = 1000 / framerate;
   }
 
@@ -53,7 +59,7 @@ export class AnimationLoop {
 
     if (delta >= this.#frameDistance) {
       this.#last = time;
-      this.#animations.forEach((cb: Function) => cb(this.#ctx));
+      this.#animations.forEach(this.#canvas.draw);
     }
 
     this.#raf = requestAnimationFrame(this.run.bind(this));
